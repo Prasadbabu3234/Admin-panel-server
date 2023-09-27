@@ -20,6 +20,45 @@ const client = new MongoClient(url, {
     }
 });
 
+app.post('/login', async (req, res) => {
+
+    try {
+        const {username,password} = req.body; // This will contain the data sent from Angular
+        const collection1 = client.db('Mrriage-buearo').collection('Admin');
+        const allData = await collection1.find({ "$or": [{ "username": username }, { "password": password }] }).toArray();
+        if (allData.length > 0) {
+            if (allData[0].username == username) {
+                if (allData[0].password === password) {
+                    let data = username
+                    let token = jwt.sign(data, 'myToken')
+                    res.send({ token: token, allData })
+                } else {
+                    res.status(403).json({ message: 'Incorrect passoword' })
+                }
+            } else {
+                res.status(403).json({ message: "Incorrect Username" })
+            }
+        }
+        else {
+            res.status(403).json({ message: 'Enter valid credentials' })
+        }
+    }
+    catch (error) {
+        console.log(error)
+    }
+})
+
+app.get('/profiles', async (req,res) => {
+    try {
+        const collection1 = client.db('Mrriage-buearo').collection('Marriage_Details');
+        const result = await collection1.find({}).toArray()
+        res.send(result)
+    } catch (error) {
+        
+    }
+})
+
+
 
 app.listen(5000,async () => {
     try {
